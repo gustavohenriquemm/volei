@@ -1,0 +1,1494 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Quadra de Vôlei</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Destaque para posição de saque */
+        .court-position.serving {
+            background: linear-gradient(135deg, #FFD700, #FFA500) !important;
+            border: 5px solid #FF8C00 !important;
+        }
+        
+        .court-position.serving .position-number {
+            background: #FF8C00 !important;
+            color: white !important;
+            font-weight: bold !important;
+        }
+        
+        .court-position.serving .serve-ball {
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .serving-indicator {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #8B4513;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .serving-indicator.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        /* Estilos para tela de configuração visual */
+        .setup-visual-container {
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FDC830 100%);
+            padding: 50px 30px;
+            border-radius: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 40px rgba(255,107,53,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .setup-visual-container::before {
+            content: '🏐';
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.1;
+            top: -50px;
+            right: -50px;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+        
+        .court-setup-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .team-setup-side {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .team-title {
+            text-align: center;
+            color: white;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .setup-court-positions {
+            margin-bottom: 30px;
+        }
+        
+        .setup-front-line, .setup-back-line {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .setup-position {
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            padding: 15px;
+            width: 120px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .setup-position:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border-color: #667eea;
+        }
+        
+        .setup-position.configured {
+            border-color: #28a745;
+            background: linear-gradient(145deg, #d4edda, #c3e6cb);
+        }
+        
+        .serving-position {
+            border-color: #FFD700 !important;
+            box-shadow: 0 0 15px rgba(255,215,0,0.5) !important;
+        }
+        
+        .position-number {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        
+        .position-icon {
+            font-size: 1.5em;
+            margin: 5px 0;
+        }
+        
+        .position-name {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .player-name-display {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 8px;
+            min-height: 20px;
+        }
+        
+        .player-photo-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px auto;
+            font-size: 0.8em;
+        }
+        
+        .serve-indicator {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #8B4513;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .net-separator-setup {
+            width: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 50px 10px;
+        }
+        
+        .net-pole-setup {
+            width: 8px;
+            height: 60px;
+            background: linear-gradient(to bottom, #C0C0C0, #808080);
+            border-radius: 4px;
+        }
+        
+        .net-mesh-setup {
+            width: 15px;
+            height: 300px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255,255,255,0.3),
+                rgba(255,255,255,0.3) 5px,
+                transparent 5px,
+                transparent 10px
+            );
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        
+        .reserves-section {
+            margin-top: 20px;
+        }
+        
+        .reserves-section h4 {
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .reserves-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .reserve-position {
+            background: linear-gradient(145deg, #fff, #f8f9fa);
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .reserve-position:hover {
+            transform: translateY(-3px);
+            border-color: #667eea;
+        }
+        
+        .reserve-position.configured {
+            border-color: #28a745;
+            background: linear-gradient(145deg, #d4edda, #c3e6cb);
+        }
+        
+        .reserve-number {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+        
+        .start-game-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .btn-start-match {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.3em;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(40,167,69,0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-start-match:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(40,167,69,0.5);
+        }
+        
+        /* Modal de configuração */
+        #player-config-modal .modal-content {
+            max-width: 500px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .modal-position-info {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .config-section {
+            margin-bottom: 20px;
+        }
+        
+        .config-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .config-section input, .config-section select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .photo-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+            border: 2px solid #ddd;
+        }
+        
+        .btn-save {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        /* Estilos para lista de jogadores */
+        .players-list-section {
+            margin-top: 30px;
+            padding: 35px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 100%;
+            overflow: hidden;
+        }
+        
+        .players-container {
+            display: flex;
+            gap: 40px;
+            justify-content: space-between;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        
+        .team-players-list {
+            flex: 1;
+            min-width: 0;
+            max-width: calc(50% - 30px);
+        }
+        
+        .team-players-list h4 {
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .players-grid-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .player-input-card {
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 250px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .player-input-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+        
+        /* Estilos removidos - substituídos pela nova estrutura */
+        
+        .player-name-input {
+            width: 100%;
+            max-width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+            background: white;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .player-name-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102,126,234,0.3);
+            outline: none;
+        }
+        
+        .player-position-select {
+            width: 100%;
+            max-width: 100%;
+            padding: 9px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            background: white;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .player-position-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102,126,234,0.3);
+            outline: none;
+        }
+        
+        .player-number {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Nova estrutura de cards */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .position-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Badges específicos por posição */
+        .position-badge.libero {
+            background: linear-gradient(45deg, #ffd700, #ffb347);
+            color: #333;
+        }
+        
+        .position-badge.levantador {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+        }
+        
+        .position-badge.central {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        
+        .position-badge.atacante {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        }
+        
+        .position-badge.oposto {
+            background: linear-gradient(45deg, #ff9500, #ff5722);
+        }
+        
+        .position-badge.defensor {
+            background: linear-gradient(45deg, #4caf50, #45a049);
+        }
+        
+        .position-badge.reserva {
+            background: linear-gradient(45deg, #9c27b0, #673ab7);
+        }
+        
+        .position-badge.jogador {
+            background: linear-gradient(45deg, #6c757d, #495057);
+        }
+        
+        .player-photo {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #ddd;
+            font-size: 1.5em;
+            overflow: hidden;
+        }
+        
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .position-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 15px;
+            text-align: center;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+        }
+        
+        .player-extra-field {
+            width: 100%;
+            max-width: 100%;
+            padding: 6px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+            background: white;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .player-extra-field:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 3px rgba(102,126,234,0.3);
+            outline: none;
+        }
+        
+        /* Estado preenchido do card */
+        .player-input-card.filled {
+            border-color: #28a745;
+            background: linear-gradient(145deg, #d4edda, #c3e6cb);
+        }
+        
+        .player-input-card.filled .card-header {
+            border-bottom-color: #28a745;
+        }
+        
+        .player-input-card.filled .player-photo {
+            background: linear-gradient(145deg, #28a745, #20c997);
+            color: white;
+            border-color: #28a745;
+        }
+        
+        /* Rede separadora temática */
+        .net-separator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 400px;
+            margin: 0 10px;
+            position: relative;
+        }
+        
+        .net-pole {
+            width: 8px;
+            height: 40px;
+            background: linear-gradient(to bottom, #C0C0C0, #808080);
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .net-mesh {
+            flex: 1;
+            width: 50px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255,255,255,0.8),
+                rgba(255,255,255,0.8) 8px,
+                transparent 8px,
+                transparent 16px
+            );
+            border: 3px solid rgba(255,255,255,0.9);
+            border-radius: 5px;
+            margin: 5px 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .net-line {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, #FFD700, #FFA500);
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+        
+        .net-center {
+            font-size: 2em;
+            z-index: 1;
+            animation: bounce 2s infinite ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Estilos para campos de foto */
+        .player-photo-input {
+            width: 100%;
+            max-width: 100%;
+            padding: 8px;
+            border: 2px dashed #ddd;
+            border-radius: 6px;
+            font-size: 11px;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .player-photo-input:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+        
+        .photo-label {
+            font-size: 11px;
+            color: #666;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        /* Estilos para botões de tipo de ponto */
+        .btn-point-type {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-point-type:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+        }
+        
+        .btn-point-type:active {
+            transform: translateY(-1px);
+        }
+        
+        /* Responsividade */
+        @media (max-width: 1200px) {
+            .players-grid-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1201px) {
+            .players-grid-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .players-container {
+                flex-direction: column;
+            }
+            
+            .team-players-list {
+                max-width: 100%;
+            }
+            
+            .players-grid-list {
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                gap: 15px;
+                padding-bottom: 15px;
+                scroll-snap-type: x mandatory;
+            }
+            
+            .player-input-card {
+                min-width: 280px;
+                flex-shrink: 0;
+                scroll-snap-align: start;
+            }
+            
+            .net-separator {
+                display: none;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Cabeçalho -->
+        <header>
+            <h1>🏐 Gerenciador de Quadra de Vôlei</h1>
+        </header>
+
+        <!-- Seção de Configuração dos Jogadores -->
+        <section id="setup-section" class="section">
+            <div class="setup-visual-container">
+                <h2 style="text-align: center; color: white; font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">⚙️ Cadastro de Jogadores</h2>
+                <p style="text-align: center; color: white; font-size: 1.3em; margin-bottom: 40px; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">Preencha o nome e selecione a posição de cada jogador</p>
+                
+                <!-- Jogadores Titulares -->
+                <div class="players-list-section">
+                    <h3 style="color: white; text-align: center; margin-bottom: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">👥 Jogadores Cadastrados</h3>
+                    <div class="players-container" style="gap: 20px;">
+                        <div class="team-players-list">
+                            <h4>🔵 Time A</h4>
+                            <div class="players-grid-list" id="playersListA">
+                                <!-- Cards para 6 jogadores do Time A -->
+                                <div class="player-input-card" data-team="A" data-index="1">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 1</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="A" data-index="2">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 2</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="A" data-index="3">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 3</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="A" data-index="4">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 4</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="A" data-index="5">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 5</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="A" data-index="6">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 6</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Rede separadora temática -->
+                        <div class="net-separator">
+                            <div class="net-pole"></div>
+                            <div class="net-mesh">
+                                <div class="net-line"></div>
+                                <div class="net-center">🏐</div>
+                            </div>
+                            <div class="net-pole"></div>
+                        </div>
+                        
+                        <div class="team-players-list">
+                            <h4>🔴 Time B</h4>
+                            <div class="players-grid-list" id="playersListB">
+                                <!-- Cards para 6 jogadores do Time B -->
+                                <div class="player-input-card" data-team="B" data-index="1">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 1</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="B" data-index="2">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 2</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="B" data-index="3">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 3</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="B" data-index="4">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 4</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="B" data-index="5">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 5</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="B" data-index="6">
+                                    <div class="card-header">
+                                        <span class="position-badge jogador">Jogador</span>
+                                        <div class="player-photo">👤</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador 6</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do jogador" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="">Selecione a posição</option>
+                                            <option value="libero">Líbero 🏐</option>
+                                            <option value="levantador">Levantador 🙌</option>
+                                            <option value="central">Central 🛡️</option>
+                                            <option value="atacante">Atacante Ponta ⚡</option>
+                                            <option value="oposto">Oposto 💪</option>
+                                            <option value="defensor">Defensor Central 🛡️</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Reservas -->
+                <div class="players-list-section" style="margin-top: 30px;">
+                    <h3 style="color: white; text-align: center; margin-bottom: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">🔄 Jogadores Reservas</h3>
+                    <div class="players-container">
+                        <div class="team-players-list">
+                            <h4>🔵 Reservas Time A</h4>
+                            <div class="players-grid-list" id="reservesListA">
+                                <!-- Cards para reservas do Time A -->
+                                <div class="player-input-card" data-team="A" data-index="R1">
+                                    <div class="card-header">
+                                        <span class="position-badge reserva">Reserva</span>
+                                        <div class="player-photo">🎯</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador Reserva</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do reserva" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="reserva">Reserva 🎯</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="A" data-index="R2">
+                                    <div class="card-header">
+                                        <span class="position-badge reserva">Reserva</span>
+                                        <div class="player-photo">🎯</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador Reserva</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do reserva" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="reserva">Reserva 🎯</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="A" data-index="R3">
+                                    <div class="card-header">
+                                        <span class="position-badge reserva">Reserva</span>
+                                        <div class="player-photo">🎯</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador Reserva</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do reserva" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="reserva">Reserva 🎯</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="team-players-list">
+                            <h4>🔴 Reservas Time B</h4>
+                            <div class="players-grid-list" id="reservesListB">
+                                <!-- Cards para reservas do Time B -->
+                                <div class="player-input-card" data-team="B" data-index="R1">
+                                    <div class="card-header">
+                                        <span class="position-badge reserva">Reserva</span>
+                                        <div class="player-photo">🎯</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador Reserva</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do reserva" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="reserva">Reserva 🎯</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="B" data-index="R2">
+                                    <div class="card-header">
+                                        <span class="position-badge reserva">Reserva</span>
+                                        <div class="player-photo">🎯</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador Reserva</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do reserva" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="reserva">Reserva 🎯</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="player-input-card" data-team="B" data-index="R3">
+                                    <div class="card-header">
+                                        <span class="position-badge reserva">Reserva</span>
+                                        <div class="player-photo">🎯</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="position-title">Jogador Reserva</div>
+                                        <input type="text" class="player-name-input" placeholder="Nome do reserva" maxlength="20">
+                                        <select class="player-position-select">
+                                            <option value="reserva">Reserva 🎯</option>
+                                        </select>
+                                        <label class="photo-label">📷 Foto do jogador (opcional)</label>
+                                        <input type="file" class="player-photo-input" accept="image/*">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Controle -->
+                <div class="start-game-section">
+                    <div style="display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                        <button id="start-match" class="btn btn-start-match">🚀 Iniciar Partida</button>
+                        <button onclick="clearAllPlayerData()" class="btn" style="background: linear-gradient(45deg, #dc3545, #c82333); color: white; padding: 12px 25px; border-radius: 20px; border: none; cursor: pointer;">🗑️ Limpar Dados</button>
+                        <div style="display: flex; flex-direction: column; align-items: center; color: white; font-size: 0.9em;">
+                            <span>💾 Dados salvos automaticamente</span>
+                            <span style="font-size: 0.8em; opacity: 0.8;">Recarregue a página para testar</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </section>
+
+        <!-- Seção do Jogo -->
+        <section id="match-section" class="section hidden">
+            <!-- Placar -->
+            <div class="scoreboard">
+                <div class="team-score">
+                    <div class="team-info">
+                        <h3>Time A</h3>
+                        <div class="serving-indicator" id="servingA">🏐 SACANDO</div>
+                    </div>
+                    <div class="score-display">
+                        <span id="scoreA" class="score">0</span>
+                        <div class="sets-won">
+                            Sets: <span id="setsA">0</span>
+                        </div>
+                    </div>
+                    <div class="score-controls">
+                        <button class="btn btn-point" onclick="showPlayerSelection('A')">+ Ponto</button>
+                        <button class="btn btn-danger" onclick="removePoint('A')">- Ponto</button>
+                    </div>
+                </div>
+                
+                <div class="vs-section">
+                    <div class="vs">VS</div>
+                    <div class="match-info">
+                        <div>Set <span id="currentSet">1</span></div>
+                        <div id="timer">00:00</div>
+                    </div>
+                </div>
+                
+                <div class="team-score">
+                    <div class="team-info">
+                        <h3>Time B</h3>
+                        <div class="serving-indicator hidden" id="servingB">🏐 SACANDO</div>
+                    </div>
+                    <div class="score-display">
+                        <span id="scoreB" class="score">0</span>
+                        <div class="sets-won">
+                            Sets: <span id="setsB">0</span>
+                        </div>
+                    </div>
+                    <div class="score-controls">
+                        <button class="btn btn-point" onclick="showPlayerSelection('B')">+ Ponto</button>
+                        <button class="btn btn-danger" onclick="removePoint('B')">- Ponto</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Seleção de Jogador -->
+            <div id="player-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🏐 Quem fez o ponto?</h3>
+                        <div class="team-name" id="modal-team"></div>
+                    </div>
+                    <div class="modal-body">
+                        <div class="player-grid" id="player-grid">
+                            <!-- Jogadores serão inseridos dinamicamente -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-cancel" onclick="closePlayerModal()">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Seleção de Jogador que Errou -->
+            <div id="error-player-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: linear-gradient(45deg, #dc3545, #c82333); color: white; padding: 20px; border-radius: 15px 15px 0 0;">
+                        <h3 style="margin: 0; font-size: 1.5em;" id="error-modal-title">🚫 Quem cometeu o erro?</h3>
+                        <div style="font-size: 1.1em; margin-top: 8px;">
+                            <strong id="error-opponent-team"></strong>
+                        </div>
+                    </div>
+                    <div class="modal-body">
+                        <div class="player-grid" id="error-player-grid">
+                            <!-- Jogadores serão inseridos dinamicamente -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-cancel" onclick="closeErrorPlayerModal()">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Tipo de Ponto -->
+            <div id="point-type-modal" class="modal hidden">
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header" style="background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 15px 15px 0 0;">
+                        <h3 style="margin: 0; font-size: 1.5em;">⚡ Tipo de Ponto</h3>
+                        <div style="font-size: 1.3em; margin-top: 8px; font-weight: bold;">
+                            <span id="point-type-team-name"></span>
+                        </div>
+                    </div>
+                    <div class="modal-body" style="padding: 30px;">
+                        <p style="text-align: center; color: #666; margin-bottom: 25px; font-size: 1.1em;">Como foi o ponto?</p>
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <button class="btn-point-type" onclick="addPointWithType('normal')" style="background: linear-gradient(45deg, #FF6B35, #F7931E); color: white; border: none; padding: 18px; border-radius: 12px; font-size: 1.2em; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(255,107,53,0.3);">
+                                <span style="font-size: 1.5em;">⚡</span> Cortada / Ataque Normal
+                            </button>
+                            <button class="btn-point-type" onclick="addPointWithType('ace')" style="background: linear-gradient(45deg, #28a745, #20c997); color: white; border: none; padding: 18px; border-radius: 12px; font-size: 1.2em; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(40,167,69,0.3);">
+                                <span style="font-size: 1.5em;">🎯</span> Ace (Saque Direto)
+                            </button>
+                            <button class="btn-point-type" onclick="addPointWithType('block')" style="background: linear-gradient(45deg, #2196F3, #1976D2); color: white; border: none; padding: 18px; border-radius: 12px; font-size: 1.2em; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(33,150,243,0.3);">
+                                <span style="font-size: 1.5em;">🛡️</span> Bloqueio
+                            </button>
+                            <button class="btn-point-type" onclick="addPointWithType('out')" style="background: linear-gradient(45deg, #dc3545, #c82333); color: white; border: none; padding: 18px; border-radius: 12px; font-size: 1.2em; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(220,53,69,0.3);">
+                                <span style="font-size: 1.5em;">🚫</span> Bola Fora (Adversário Errou)
+                            </button>
+                            <button class="btn-point-type" onclick="addPointWithType('invasion')" style="background: linear-gradient(45deg, #ffc107, #ff9800); color: white; border: none; padding: 18px; border-radius: 12px; font-size: 1.2em; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(255,193,7,0.3);">
+                                <span style="font-size: 1.5em;">⚠️</span> Invasão (Adversário Errou)
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="padding: 20px; border-top: 1px solid #e0e0e0;">
+                        <button class="btn btn-cancel" onclick="closePointTypeModal()" style="width: 100%; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1em;">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quadra -->
+            <div class="court-section">
+                <h3 style="text-align: center; color: #667eea; font-size: 2em; margin-bottom: 30px;">🏐 Quadra de Vôlei - Vista de Cima</h3>
+                <div class="volleyball-court-container">
+                    <!-- Linha lateral esquerda -->
+                    <div class="court-boundary left"></div>
+                    
+                    <!-- Quadra principal -->
+                    <div class="court-main">
+                        <!-- Etiquetas dos times -->
+                        <div class="team-label-top">🔵 TIME A</div>
+                        <div class="team-label-bottom">🔴 TIME B</div>
+                        
+                        <!-- Time A (Parte Superior) -->
+                        <div class="team-half team-a-half">
+                            <!-- Linha de trás (posições 5, 6, 1) -->
+                            <div class="court-row">
+                                <div class="court-position" id="courtA-5" data-position="5">
+                                    <div class="position-number">5</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Saída</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                                <div class="court-position" id="courtA-6" data-position="6">
+                                    <div class="position-number">6</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Defensor</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                                <div class="court-position" id="courtA-1" data-position="1">
+                                    <div class="position-number">1</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Líbero</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Linha de ataque (3m) -->
+                            <div class="attack-line"></div>
+                            
+                            <!-- Linha de frente (posições 4, 3, 2) -->
+                            <div class="court-row">
+                                <div class="court-position" id="courtA-4" data-position="4">
+                                    <div class="position-number">4</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Atacante</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                                <div class="court-position" id="courtA-3" data-position="3">
+                                    <div class="position-number">3</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Central</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                                <div class="court-position" id="courtA-2" data-position="2">
+                                    <div class="position-number">2</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Levantador</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rede Central -->
+                        <div class="volleyball-net">
+                            <div class="net-post left-post">🔴</div>
+                            <div class="net-line"></div>
+                            <div class="net-center-marker">⚪ REDE ⚪</div>
+                            <div class="net-post right-post">🔴</div>
+                        </div>
+
+                        <!-- Time B (Parte Inferior) -->
+                        <div class="team-half team-b-half">
+                            <!-- Linha de frente (posições 2, 3, 4) -->
+                            <div class="court-row">
+                                <div class="court-position" id="courtB-2" data-position="2">
+                                    <div class="position-number">2</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Levantador</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                                <div class="court-position" id="courtB-3" data-position="3">
+                                    <div class="position-number">3</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Central</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                                <div class="court-position" id="courtB-4" data-position="4">
+                                    <div class="position-number">4</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Atacante</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Linha de ataque (3m) -->
+                            <div class="attack-line"></div>
+                            
+                            <!-- Linha de trás (posições 1, 6, 5) -->
+                            <div class="court-row">
+                                <div class="court-position" id="courtB-1" data-position="1">
+                                    <div class="position-number">1</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Líbero</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                                <div class="court-position" id="courtB-6" data-position="6">
+                                    <div class="position-number">6</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Defensor</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                                <div class="court-position" id="courtB-5" data-position="5">
+                                    <div class="position-number">5</div>
+                                    <div class="player-photo">👤</div>
+                                    <div class="player-name"></div>
+                                    <div class="position-role">Saída</div>
+                                    <div class="serve-ball hidden">🏐</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Linha lateral direita -->
+                    <div class="court-boundary right"></div>
+                </div>
+            </div>
+
+            <!-- Controles da Partida -->
+            <div class="match-controls">
+                <button class="btn btn-rotate" onclick="rotateTeam('A')">
+                    🔄 Rotacionar Time A
+                </button>
+                <button class="btn btn-rotate" onclick="rotateTeam('B')">
+                    🔄 Rotacionar Time B
+                </button>
+                <button class="btn btn-substitution" onclick="showSubstitutionPanel('A')">
+                    🔄 Substituição Time A
+                </button>
+                <button class="btn btn-substitution" onclick="showSubstitutionPanel('B')">
+                    🔄 Substituição Time B
+                </button>
+                <button class="btn btn-timeout" onclick="callTimeout('A')">
+                    ⏱️ Tempo Time A
+                </button>
+                <button class="btn btn-timeout" onclick="callTimeout('B')">
+                    ⏱️ Tempo Time B
+                </button>
+                <button class="btn btn-end" onclick="endMatch()">
+                    🏁 Finalizar Partida
+                </button>
+            </div>
+
+            <!-- Painel de Substituição -->
+            <div id="substitution-panel" class="panel hidden">
+                <div class="panel-content">
+                    <div class="panel-header">
+                        <h3>🔄 Substituição</h3>
+                        <div class="panel-team" id="substitution-team"></div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="substitution-section">
+                            <h4>Jogador a ser substituído:</h4>
+                            <div class="player-list" id="players-out">
+                                <!-- Lista de jogadores em quadra -->
+                            </div>
+                        </div>
+                        <div class="substitution-section">
+                            <h4>Jogador substituto:</h4>
+                            <div class="player-list" id="players-in">
+                                <!-- Lista de jogadores reservas -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-footer">
+                        <button class="btn btn-confirm" onclick="confirmSubstitution()">Confirmar</button>
+                        <button class="btn btn-cancel" onclick="closeSubstitutionPanel()">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Seção de Relatório Final -->
+        <section id="report-section" class="section hidden">
+            <h2>📋 Relatório Final da Partida</h2>
+            <div id="match-report">
+                <!-- Conteúdo do relatório será gerado dinamicamente -->
+            </div>
+            <div class="report-actions">
+                <button class="btn btn-primary" onclick="newMatch()">🔄 Nova Partida</button>
+                <button class="btn btn-secondary" onclick="exportReport()">📄 Exportar Relatório</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
+
+
+
