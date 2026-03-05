@@ -46,12 +46,14 @@
         /* Estilos para tela de configuração visual */
         .setup-visual-container {
             background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FDC830 100%);
-            padding: 50px 30px;
-            border-radius: 25px;
-            margin-bottom: 30px;
+            padding: 30px 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
             box-shadow: 0 15px 40px rgba(255,107,53,0.3);
             position: relative;
             overflow: hidden;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         
         .setup-visual-container::before {
@@ -362,16 +364,17 @@
         
         .players-container {
             display: flex;
-            gap: 40px;
+            gap: 15px;
             justify-content: space-between;
             max-width: 100%;
             overflow: hidden;
+            box-sizing: border-box;
         }
         
         .team-players-list {
             flex: 1;
             min-width: 0;
-            max-width: calc(50% - 30px);
+            max-width: calc(50% - 25px);
         }
         
         .team-players-list h4 {
@@ -384,21 +387,22 @@
         
         .players-grid-list {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
             width: 100%;
             max-width: 100%;
+            box-sizing: border-box;
         }
         
         .player-input-card {
             background: linear-gradient(145deg, #ffffff, #f0f0f0);
             border: 2px solid #ddd;
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: 10px;
+            padding: 12px;
             text-align: center;
             transition: all 0.3s ease;
             position: relative;
-            min-height: 250px;
+            min-height: 240px;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
@@ -596,11 +600,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             width: 40px;
-            height: 400px;
+            min-height: 100%;
             margin: 0 10px;
             position: relative;
+            padding-top: 80px;
         }
         
         .net-pole {
@@ -613,22 +618,24 @@
         
         .net-mesh {
             flex: 1;
-            width: 50px;
+            width: 30px;
+            min-height: 300px;
             background: repeating-linear-gradient(
                 0deg,
-                rgba(255,255,255,0.8),
-                rgba(255,255,255,0.8) 8px,
+                rgba(255,255,255,0.6),
+                rgba(255,255,255,0.6) 8px,
                 transparent 8px,
                 transparent 16px
             );
-            border: 3px solid rgba(255,255,255,0.9);
-            border-radius: 5px;
+            border-left: 2px solid rgba(255,255,255,0.7);
+            border-right: 2px solid rgba(255,255,255,0.7);
+            border-radius: 3px;
             margin: 5px 0;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .net-line {
@@ -639,7 +646,7 @@
             width: 2px;
             height: 100%;
             background: linear-gradient(to bottom, #FFD700, #FFA500);
-            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+            box-shadow: 0 0 8px rgba(255,215,0,0.4);
         }
         
         .net-center {
@@ -696,21 +703,51 @@
         }
         
         /* Responsividade */
-        @media (max-width: 1200px) {
+        @media (min-width: 1600px) {
+            .players-grid-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .container {
+                max-width: 1500px;
+            }
+        }
+        
+        @media (max-width: 1400px) {
             .players-grid-list {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
         
-        @media (min-width: 1201px) {
+        @media (max-width: 1100px) {
+            .players-container {
+                gap: 10px;
+            }
+            
+            .net-separator {
+                width: 30px;
+            }
+            
+            .net-mesh {
+                width: 25px;
+            }
+        }
+        
+        @media (max-width: 900px) {
             .players-grid-list {
-                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            
+            .player-input-card {
+                padding: 10px;
+                min-height: 230px;
             }
         }
         
         @media (max-width: 768px) {
             .players-container {
                 flex-direction: column;
+                gap: 20px;
             }
             
             .team-players-list {
@@ -718,22 +755,18 @@
             }
             
             .players-grid-list {
-                display: flex;
-                flex-direction: row;
-                overflow-x: auto;
-                gap: 15px;
-                padding-bottom: 15px;
-                scroll-snap-type: x mandatory;
-            }
-            
-            .player-input-card {
-                min-width: 280px;
-                flex-shrink: 0;
-                scroll-snap-align: start;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
             }
             
             .net-separator {
                 display: none;
+            }
+        }
+        
+        @media (max-width: 550px) {
+            .players-grid-list {
+                grid-template-columns: 1fr;
             }
         }
 

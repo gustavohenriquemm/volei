@@ -14,9 +14,11 @@ body {
 }
 
 .container {
-    max-width: 1600px;
+    max-width: 100%;
+    width: 100%;
     margin: 0 auto;
-    padding: 25px;
+    padding: 15px;
+    box-sizing: border-box;
 }
 
 /* Cabeçalho */
@@ -709,13 +711,15 @@ header h1 {
     display: flex;
     justify-content: center;
     align-items: stretch;
-    max-width: 1400px;
+    max-width: 100%;
+    width: 100%;
     margin: 0 auto;
-    padding: 50px 30px;
+    padding: 30px 20px;
     background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
     border-radius: 20px;
     box-shadow: 0 15px 50px rgba(0,0,0,0.5);
     position: relative;
+    box-sizing: border-box;
 }
 
 .court-boundary {
@@ -733,7 +737,7 @@ header h1 {
 
 .court-main {
     flex: 1;
-    max-width: 900px;
+    max-width: 100%;
     background: linear-gradient(135deg, #d4884f 0%, #c97a42 100%);
     border: 5px solid white;
     box-shadow: 
@@ -1460,9 +1464,39 @@ header h1 {
 }
 
 /* Responsividade */
+/* Telas grandes mantém layout completo */
+@media (min-width: 1600px) {
+    .container {
+        max-width: 1500px;
+    }
+    
+    .volleyball-court-container {
+        max-width: 1300px;
+        padding: 40px 30px;
+    }
+}
+
+/* Ajustes para telas médias e zoom alto (ex: 110%) */
+@media (max-width: 1400px) {
+    .volleyball-court-container {
+        padding: 30px 20px;
+    }
+    
+    .court-position {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .container {
+        padding: 12px;
+    }
+}
+
 @media (max-width: 1024px) {
     .volleyball-court-container {
-        max-width: 900px;
+        max-width: 100%;
+        padding: 25px 15px;
     }
     
     .court-position {
