@@ -446,17 +446,6 @@ function canStartMatch() {
         if (playerCount < 6) {
             errors.push(`${teamName} precisa de pelo menos 6 jogadores completos (nome + posição)`);
         }
-        
-        // Verificar posições duplicadas
-        const positions = {};
-        Object.keys(players).forEach(index => {
-            const player = players[index];
-            if (player.position && positions[player.position]) {
-                errors.push(`${teamName} tem posições duplicadas: ${player.position}`);
-            } else if (player.position) {
-                positions[player.position] = true;
-            }
-        });
     });
     
     return errors;
